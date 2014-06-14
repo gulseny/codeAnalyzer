@@ -3,5 +3,12 @@ html
   head
     title= title
     link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src='/lib/jquery-1.11.0.min.js')
+    script(src='/lib/ace/src-noconflict/ace.js')
   body
     block content
+    script.
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/javascript");
+    script(src='/javascripts/main.js')
