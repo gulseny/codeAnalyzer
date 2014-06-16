@@ -7,13 +7,25 @@ a {
   color: #00B7FF;
 }
 
+.textEditor{
+	float: left;
+	margin-left: 80px;
+}
+
 #editor {
-	margin: 50px 0 0 50px;
 	width: 500px;
 	height: 500px;
 }
 
 .check {
 	margin-top: 10px;
-	margin-left: 450px;
+	margin-left: 400px;
+}
+
+.messages{
+	float: right;
+	margin-right: 80px;
+	width: 500px;
+	height: 500px;
+	border: solid 1px;
 }
