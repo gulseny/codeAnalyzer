@@ -14,8 +14,8 @@ li {
 #editor {
 	float: left;
 	margin-left: 80px;
-	width: 500px;
-	height: 500px;
+	width: 400px;
+	height: 400px;
 }
 
 .check {
@@ -26,8 +26,8 @@ li {
 .messages{
 	float: right;
 	margin-right: 80px;
-	width: 500px;
-	height: 500px;
+	width: 400px;
+	height: 400px;
 	border: solid 1px;
 }
 
