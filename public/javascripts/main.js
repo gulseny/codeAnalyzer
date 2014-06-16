@@ -21,14 +21,17 @@ var checkBlackList = function(ast, list){
 
 	acorn.walk.simple(ast, actions);
 
-	var blackList = $('.blackList')[0].childNodes;
-	for(var i = 0; i < blackList.length; i++){
-		if(dangerZone[blackList[i].innerHTML] && !blackList[i].classList.contains('shouldNotHave')){
-			blackList[i].classList.add('shouldNotHave');
-		} else if(!dangerZone[blackList[i].innerHTML] && blackList[i].classList.contains('shouldNotHave')){
-			blackList[i].classList.remove('shouldNotHave');
+	// change text color depending on the results
+	var $blackList = $('.blackList li');
+	$blackList.each(function(i){
+		if(dangerZone[$(this).html()] && !$(this).hasClass('shouldNotHave')){
+			$(this).addClass('shouldNotHave');
+		} else if(!dangerZone[$(this).html()] && $(this).hasClass('shouldNotHave')){
+			$(this).removeClass('shouldNotHave');
 		}
-	}
+	});
+
+	console.log('running blacklist');
 };
 
 // checks the syntax tree for functionality listed in the whitelist and display results on the screen
@@ -43,14 +46,18 @@ var checkWhiteList = function(ast, list){
 	}
 	acorn.walk.simple(ast, actions);
 
-	var whiteList = $('.whiteList')[0].childNodes;
-	for(var i = 0; i < whiteList.length; i++){
-		if(mustHaves[whiteList[i].innerHTML] && !whiteList[i].classList.contains('shouldHave')){
-			whiteList[i].classList.add('shouldHave');
-		} else if(!mustHaves[whiteList[i].innerHTML]){
-			whiteList[i].classList.remove('shouldHave');
+	// change text color depending on the results
+	var $whiteList = $('.whiteList li');
+	$whiteList.each(function(i){
+		if(mustHaves[$(this).html()] && !$(this).hasClass('shouldHave')){
+			$(this).addClass('shouldHave');
+		} else if(!mustHaves[$(this).html()]){
+			$(this).removeClass('shouldHave');
 		}
-	}
+	});
+
+
+	console.log('running whitelist');
 };
 
 
@@ -97,6 +104,15 @@ var checkStructure = function(ast, structure){
 	return result(doesContain);
 };
 
+var runCheckStructure = function(ast, structure){
+	var $structure = $('.structure li');
+	if(checkStructure(ast, structure) && !$structure.hasClass('shouldHave')){
+		$structure.addClass('shouldHave');
+	} else if(!checkStructure(ast, structure)){
+		$structure.removeClass('shouldHave');
+	}
+};
+
 // acorn syntax elements
 // var Syntax = ['Program','Statement','EmptyStatement','ExpressionStatement','IfStatement','LabeledStatement','BreakStatement',
 // 'WithStatement','SwitchStatement','ReturnStatement','ThrowStatement','TryStatement','WhileStatement','DoWhileStatement',
@@ -127,12 +143,7 @@ var runTests = function(){
 		$('.messages').find('.error').remove();
 		checkBlackList(ast, blackList);
 		checkWhiteList(ast, whiteList);
-		var $structure = $('.structure')[0];
-		if(checkStructure(ast, structure) && !$structure.classList.contains('shouldHave')){
-			$structure.classList.add('shouldHave');
-		} else if(!checkStructure(ast, structure)){
-			$structure.classList.remove('shouldHave');
-		}
+		runCheckStructure(ast, structure);
 	} else {
 		$('.messages').append('<p class="error shouldNotHave">Oops! Syntax error in your code: ' + ast + '</p>')
 	}
