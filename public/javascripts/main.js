@@ -105,8 +105,11 @@ var $button = $('.check');
 var blackList = ['WhileStatement', 'IfStatement'];
 var whiteList = ['ForStatement', 'VariableDeclaration'];
 var structure = {'VariableDeclaration': [], 'ForStatement': ['IfStatement'], 'WhileStatement': ['IfStatement', 'VariableDeclaration']};
-$button.on('click', function(){
+
+
+var runTests = function(){
 	var ast = getAst();
+	console.log('ast: ', ast);
 	if(typeof ast !== 'string'){
 		checkBlackList(ast, blackList);
 		checkWhiteList(ast, whiteList);
@@ -114,6 +117,15 @@ $button.on('click', function(){
 	} else {
 		console.log('error: ', ast);
 	}
+};
+
+var typingTimeout;
+var $editor = $('#editor');
+$editor.keyup(function(){
+	clearTimeout(typingTimeout);
+	typingTimeout = setTimeout(function(){
+		runTests();
+	}, 5000);
 });
 
 
