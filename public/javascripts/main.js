@@ -1,10 +1,13 @@
 var getAst = function(){
 	var editorCode = editor.getValue();
-	return acorn.parse(editorCode);
+	try {
+		return acorn.parse(editorCode);
+	} catch (e) {
+		return e.message;
+	}
 };
 
-var checkBlackList = function(list){
-	var ast = getAst();
+var checkBlackList = function(ast, list){
 	var actions = {};
 	var dangerZone = {};
 	for(var i = 0; i < list.length; i++){
@@ -15,7 +18,6 @@ var checkBlackList = function(list){
 	}
 
 	acorn.walk.simple(ast, actions);
-	console.log('dangerZone: ', dangerZone);
 
 	if(Object.keys(dangerZone).length){
 		var message = '';
@@ -29,8 +31,7 @@ var checkBlackList = function(list){
 };
 
 // variable declarations within the for loops?
-var checkWhiteList = function(list){
-	var ast = getAst();
+var checkWhiteList = function(ast, list){
 	var actions = {};
 	var mustHaves = {};
 	for(var i = 0; i < list.length; i++){
@@ -57,8 +58,7 @@ var checkWhiteList = function(list){
 
 // takes in an array where strings are parents and inner arrays are lists of their children
 // {'VariableDeclaration': [], 'ForStatement': ['IfStatement'], 'WhileStatement': ['IfStatement', 'VariableDeclaration']}
-var checkStructure = function(structure, syntaxTree){
-	var ast = syntaxTree || getAst();
+var checkStructure = function(ast, structure){
 	var actions = {};
 	var doesContain = {};
 	for(var key in structure){
@@ -76,7 +76,7 @@ var checkStructure = function(structure, syntaxTree){
 				
 				var childStructure = {};
 				childStructure[target] = [];
-				doesContain[node.type][target] = checkStructure(childStructure, node);
+				doesContain[node.type][target] = checkStructure(node, childStructure);
 			}
 		};
 	}
@@ -106,9 +106,14 @@ var blackList = ['WhileStatement', 'IfStatement'];
 var whiteList = ['ForStatement', 'VariableDeclaration'];
 var structure = {'VariableDeclaration': [], 'ForStatement': ['IfStatement'], 'WhileStatement': ['IfStatement', 'VariableDeclaration']};
 $button.on('click', function(){
-	checkBlackList(blackList);
-	checkWhiteList(whiteList);
-	console.log(checkStructure(structure));
+	var ast = getAst();
+	if(typeof ast !== 'string'){
+		checkBlackList(ast, blackList);
+		checkWhiteList(ast, whiteList);
+		console.log(checkStructure(ast, structure));
+	} else {
+		console.log('error: ', ast);
+	}
 });
 
 
