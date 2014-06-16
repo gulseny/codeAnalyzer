@@ -1,3 +1,4 @@
+// parses the code from the editor and returns either the syntax tree or the error message
 var getAst = function(){
 	var editorCode = editor.getValue();
 	try {
@@ -7,6 +8,7 @@ var getAst = function(){
 	}
 };
 
+// checks the syntax tree for functionality listed in the blacklist and display results on the screen
 var checkBlackList = function(ast, list){
 	var actions = {};
 	var dangerZone = {};
@@ -19,18 +21,17 @@ var checkBlackList = function(ast, list){
 
 	acorn.walk.simple(ast, actions);
 
-	if(Object.keys(dangerZone).length){
-		var message = '';
-		for(var key in dangerZone){
-			message += key + '(s)';
+	var blackList = $('.blackList')[0].childNodes;
+	for(var i = 0; i < blackList.length; i++){
+		if(dangerZone[blackList[i].innerHTML] && !blackList[i].classList.contains('shouldNotHave')){
+			blackList[i].classList.add('shouldNotHave');
+		} else if(!dangerZone[blackList[i].innerHTML] && blackList[i].classList.contains('shouldNotHave')){
+			blackList[i].classList.remove('shouldNotHave');
 		}
-		console.log('Please do not use ' + message + ' in your code!');
-	} else {
-		console.log('Good job!');
 	}
 };
 
-// variable declarations within the for loops?
+// checks the syntax tree for functionality listed in the whitelist and display results on the screen
 var checkWhiteList = function(ast, list){
 	var actions = {};
 	var mustHaves = {};
@@ -42,22 +43,19 @@ var checkWhiteList = function(ast, list){
 	}
 	acorn.walk.simple(ast, actions);
 
-	if(Object.keys(mustHaves).length !== list.length){
-		var message = '';
-		for(var i = 0; i < list.length; i++){
-			if(mustHaves[list[i]] === undefined){
-				message += list[i] + '(s)';
-			}
+	var whiteList = $('.whiteList')[0].childNodes;
+	for(var i = 0; i < whiteList.length; i++){
+		if(mustHaves[whiteList[i].innerHTML] && !whiteList[i].classList.contains('shouldHave')){
+			whiteList[i].classList.add('shouldHave');
+		} else if(!mustHaves[whiteList[i].innerHTML]){
+			whiteList[i].classList.remove('shouldHave');
 		}
-		console.log('You are missing ' + message + ' in your code!');
-	} else {
-		console.log('Good job!');
 	}
 };
 
 
 // takes in an array where strings are parents and inner arrays are lists of their children
-// {'VariableDeclaration': [], 'ForStatement': ['IfStatement'], 'WhileStatement': ['IfStatement', 'VariableDeclaration']}
+// {'FunctionDeclaration': ['ReturnStatement'], 'ForStatement': ['IfStatement']};
 var checkStructure = function(ast, structure){
 	var actions = {};
 	var doesContain = {};
@@ -83,8 +81,6 @@ var checkStructure = function(ast, structure){
 
 	acorn.walk.simple(ast, actions);
 
-	console.log(doesContain);
-
 	var result = function(obj){
 		for(var item in obj){
 			if(typeof obj[item] === 'boolean' && !obj[item]){
@@ -101,37 +97,53 @@ var checkStructure = function(ast, structure){
 	return result(doesContain);
 };
 
-var $button = $('.check');
-var blackList = ['WhileStatement', 'IfStatement'];
-var whiteList = ['ForStatement', 'VariableDeclaration'];
-var structure = {'VariableDeclaration': [], 'ForStatement': ['IfStatement'], 'WhileStatement': ['IfStatement', 'VariableDeclaration']};
-
-
-var runTests = function(){
-	var ast = getAst();
-	console.log('ast: ', ast);
-	if(typeof ast !== 'string'){
-		checkBlackList(ast, blackList);
-		checkWhiteList(ast, whiteList);
-		console.log(checkStructure(ast, structure));
-	} else {
-		console.log('error: ', ast);
-	}
-};
-
-var typingTimeout;
-var $editor = $('#editor');
-$editor.keyup(function(){
-	clearTimeout(typingTimeout);
-	typingTimeout = setTimeout(function(){
-		runTests();
-	}, 5000);
-});
-
-
+// acorn syntax elements
 // var Syntax = ['Program','Statement','EmptyStatement','ExpressionStatement','IfStatement','LabeledStatement','BreakStatement',
 // 'WithStatement','SwitchStatement','ReturnStatement','ThrowStatement','TryStatement','WhileStatement','DoWhileStatement',
 // 'ForStatement','ForInStatement','ForInit','DebuggerStatement','FunctionDeclaration','VariableDeclaration','Function',
 // 'ScopeBody','Expression','ThisExpression','ArrayExpression','ObjectExpression','FunctionExpression','SequenceExpression',
 // 'UnaryExpression','BinaryExpression','ConditionalExpression','NewExpression','MemberExpression','Identifier'];
 
+// identify tests
+var blackList = ['WhileStatement'];
+var whiteList = ['ReturnStatement', 'ForStatement', 'IfStatement', 'FunctionDeclaration'];
+var structure = {'FunctionDeclaration': ['ReturnStatement'], 'ForStatement': ['IfStatement']};
+
+//populate text area with test information
+$blackList = $('.blackList');
+for(var j = 0; j < blackList.length; j++){
+	$blackList.append('<li>' + blackList[j] + '</li>');
+}
+
+$whiteList = $('.whiteList');
+for(var j = 0; j < whiteList.length; j++){
+	$whiteList.append('<li>' + whiteList[j] +'</li>');
+}
+
+// run tests and appends an error message to the messages area if there is a syntax error
+var runTests = function(){
+	var ast = getAst();
+	if(typeof ast !== 'string'){
+		$('.messages').find('.error').remove();
+		checkBlackList(ast, blackList);
+		checkWhiteList(ast, whiteList);
+		var $structure = $('.structure')[0];
+		if(checkStructure(ast, structure) && !$structure.classList.contains('shouldHave')){
+			$structure.classList.add('shouldHave');
+		} else if(!checkStructure(ast, structure)){
+			$structure.classList.remove('shouldHave');
+		}
+	} else {
+		$('.messages').append('<p class="error shouldNotHave">Oops! Syntax error in your code: ' + ast + '</p>')
+	}
+};
+
+// run tests when there is no keyup for 3 seconds
+var typingTimeout;
+var $editor = $('#editor');
+$editor.keyup(function(){
+	clearTimeout(typingTimeout);
+	typingTimeout = setTimeout(function(){
+		runTests();
+	}, 3000);
+});

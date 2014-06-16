@@ -26,3 +26,12 @@ a {
 	height: 500px;
 	border: solid 1px;
 }
+
+.shouldNotHave, .whiteList, .structure {
+	color: red;
+}
+
+.blackList, .shouldHave{
+	color: green;
+}
+
